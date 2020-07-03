@@ -29,8 +29,10 @@ int main(int argc, const char **argv) {
   VarPrinter varPrinter;
   InoutPrinter inoutPrinter;
   TopoPrinter topoPrinter;
+  SizePrinter sizePrinter;
   ConstPrinter constPrinter;
   ArrayPrinter arrayPrinter;
+  Finder.addMatcher(getSizeMatcher, &sizePrinter);
   Finder.addMatcher(loopPrinter.forStmtMatcher(), &loopPrinter);
   Finder.addMatcher(getFieldMatcher, &varPrinter);
   Finder.addMatcher(InoutMatcher, &inoutPrinter);
@@ -77,7 +79,7 @@ int main(int argc, const char **argv) {
   topoFinder.addMatcher(topoReplacer.topoMatcher(), &topoReplacer);
   topoFinder.addMatcher(subscriReplacer.subscriMatcher(), &subscriReplacer);
   topoFinder.addMatcher(pointerReplacer.pointerMatcher(), &pointerReplacer);
-  
+
   topoTool.runAndSave(newFrontendActionFactory(&topoFinder).get());
 
   // for(auto & p : refactTool.getReplacements()) {

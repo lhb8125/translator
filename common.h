@@ -135,6 +135,7 @@ public:
   vector<unsigned int> arraySizeList; // 常数数组长度
   std::string forStmtStr; // for循环体字符串
   std::string topoName; // 拓扑变量名
+  std::string sizeName; // 维度变量名
 
   void print()
   {
@@ -154,6 +155,7 @@ public:
         llvm::outs()<<varList[i]<<"("<<fieldNameList[i]<<")"<<"("<<inoutList[i]<<"), ";
     }
     llvm::outs()<<"\nTopology variable name: "<<topoName<<"\n";
+    llvm::outs()<<"\nTopology size name: "<<sizeName<<"\n";
     llvm::outs()<<"For loop: \n";
     llvm::outs()<<forStmtStr<<"\n";
   }

@@ -8,21 +8,26 @@ public :
 
 auto forStmtMatcher(){
     return
-    forStmt(isExpansionInMainFile(), hasAncestor(functionDecl().bind("func"))).bind("forLoop");
+    // forStmt(isExpansionInMainFile(), hasAncestor(functionDecl().bind("func"))).bind("forLoop");
+    forStmt(isExpansionInMainFile(),
+        hasAncestor(functionDecl().bind("func")),
+        hasCondition(binaryOperator(hasOperatorName("<"),
+            hasRHS(declRefExpr(hasType(isInteger())).bind("size"))))).bind("forLoop");
 }  // matcher
 
 void run(const MatchFinder::MatchResult &Result) {
   ASTContext *Context = Result.Context;
   const ForStmt *FS = Result.Nodes.getNodeAs<ForStmt>("forLoop");
   const FunctionDecl *FD = Result.Nodes.getNodeAs<FunctionDecl>("func");
-  if(!FS || !FD){
+  const DeclRefExpr *DRE = Result.Nodes.getNodeAs<DeclRefExpr>("size");
+  if(!FS || !FD || !DRE){
       llvm::outs()<<"!!!can not find forLoop\n";
       return;
   }
   // auto path = Context->getSourceManager().getFilename(FS->getBeginLoc()).str();
   // auto idx = path.find_last_of('/');
   // auto filename = path.substr(idx+1,-1);
-  llvm::outs()<<"funcName: "<<FD->getNameInfo().getName().getAsString()<<"\n";
+  // llvm::outs()<<"funcName: "<<FD->getNameInfo().getName().getAsString()<<"\n";
   // if(std::strcmp(srcFile.c_str(), filename.c_str())!=0) return;
 
   const Stmt *funcBody = FS->getBody();
@@ -37,9 +42,11 @@ void run(const MatchFinder::MatchResult &Result) {
   // forStmtStr = header.str();
   // llvm::outs()<<header.str()<<"\n";
 
-  const string name = FD->getNameInfo().getName().getAsString();
+  const string name     = FD->getNameInfo().getName().getAsString();
+  const string sizeName = DRE->getNameInfo().getName().getAsString();
   for (int i = 0; i < functionInfos.size(); ++i)
   {
+  // llvm::outs()<<functionInfos[i].sizeName<<", "<<sizeName<<"\n";
       if(functionInfos[i].funcName==name)
         functionInfos[i].forStmtStr = header.str();
   }
@@ -157,6 +164,34 @@ void run(const MatchFinder::MatchResult &Result) {
   {
       if(functionInfos[i].funcName==name)
         functionInfos[i].topoName = VD->getQualifiedNameAsString();
+  }
+};
+};
+
+class SizePrinter : public MatchFinder::MatchCallback {
+public :
+void run(const MatchFinder::MatchResult &Result) {
+  ASTContext *Context = Result.Context;
+
+  const VarDecl *VD = Result.Nodes.getNodeAs<VarDecl>("size");
+  const FunctionDecl *FD = Result.Nodes.getNodeAs<FunctionDecl>("func");
+  if(!VD || !FD){
+      llvm::outs()<<"!!!can not find size\n";
+      return;
+  }
+  auto path = Context->getSourceManager().getFilename(VD->getLocation()).str();
+  auto idx = path.find_last_of('/');
+  auto filename = path.substr(idx+1,-1);
+  llvm::outs()<<"filename: "<<VD->getQualifiedNameAsString()<<"\n";
+  // if(std::strcmp(srcFile.c_str(), filename.c_str())!=0) return;
+
+  // topoName = VD->getQualifiedNameAsString();
+
+  const string name = FD->getNameInfo().getName().getAsString();
+  for (int i = 0; i < functionInfos.size(); ++i)
+  {
+      if(functionInfos[i].funcName==name)
+        functionInfos[i].sizeName = VD->getQualifiedNameAsString();
   }
 };
 };

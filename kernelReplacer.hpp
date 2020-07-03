@@ -39,6 +39,7 @@ public :
     uint32_t const length =
       sm.getFileOffset(end_of_the_end(FD->getEndLoc(),sm)) - sm.getFileOffset(FD->getBeginLoc());
     string funcBody;
+    funcBody += generateExtraHeader();
     for(int i=0;i<functionInfos.size();i++)
     {
         funcBody += "void "+functionInfos[i].funcName + generateKernelFuncDecl(i);
@@ -66,13 +67,35 @@ public :
     }
   };
 
+  string generateExtraHeader() {
+    vector<string> strList;
+    for (int i = 0; i < functionInfos.size(); ++i)
+    {
+        bool flag = true;
+        for (int j = 0; j < strList.size(); ++j)
+        {
+            if(functionInfos[i].topoName==strList[j])
+            {
+                flag = false;
+                break;
+            }
+        }
+        if(flag) strList.push_back(functionInfos[i].topoName);
+    }
+    string stmt;
+    for (int i = 0; i < strList.size(); ++i)
+    {
+        stmt += "label** "+strList[i]+";\n";
+    }
+    return stmt;
+  }
   string generateKernelFuncDecl(int fi) {
     string stmt = "_kernel(";
     for (int i = 0; i < functionInfos[fi].varList.size(); ++i)
     {
         stmt += "scalar** "+functionInfos[fi].varList[i]+", ";
     }
-    stmt += "label n, \n\t";
+    stmt += "label "+functionInfos[fi].sizeName+", \n\t";
     for (int i = 0; i < functionInfos[fi].varList.size(); ++i)
     {
         stmt += "label dim_"+functionInfos[fi].varList[i]+", ";
@@ -308,10 +331,10 @@ public :
     SourceManager &sm(Context->getSourceManager());
     uint32_t parm_begin = sm.getFileOffset(PVD->getBeginLoc());
     uint32_t parm_end   = sm.getFileOffset(PVD->getLocation());
-    llvm::outs()<<parm_end-parm_begin<<"\n";
-    llvm::outs()<<PVD->getBeginLoc().printToString(sm)<<"\n";
-    llvm::outs()<<PVD->getBeginLoc().printToString(sm)<<"\n";
-    llvm::outs()<<PVD->getLocation().printToString(sm)<<"\n";
+    // llvm::outs()<<parm_end-parm_begin<<"\n";
+    // llvm::outs()<<PVD->getBeginLoc().printToString(sm)<<"\n";
+    // llvm::outs()<<PVD->getBeginLoc().printToString(sm)<<"\n";
+    // llvm::outs()<<PVD->getLocation().printToString(sm)<<"\n";
     Replacement replPointer(Context->getSourceManager(),
         PVD->getBeginLoc(),
         parm_end-parm_begin,
